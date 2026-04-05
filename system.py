@@ -106,7 +106,6 @@ def order_del(order: str):
         deluser = users.pop(i)
         print(f"已删除 {deluser.name}")
 
-
 # 替换信息函数
 def order_rep(order: str):
     if len(process_order_format(order)) <= 1:
