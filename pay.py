@@ -1,100 +1,65 @@
 import threading
 import time
+import random
 
-MAX_MAILBOX = 3
+MAX_SHELF = 5  # 货架最多放5瓶牛奶
 
-class Mailbox:
+class Shelf:
     def __init__(self):
-        self.data = []
+        self.milk = 0
         self.lock = threading.Lock()
 
-box = Mailbox()
+shelf = Shelf()
 running = True
 
-# 发送策略
-WAIT_FOREVER = 0
-WAIT_TIMEOUT = 1
-NO_WAIT = 2
-BUFFER_MSG = 3
-
-# 获取当前时间（毫秒）
-def current_ms():
-    return int(time.time() * 1000)
-
-# 发送函数
-def mach_msg_sim(msg, option, timeout_ms=0):
-    start = current_ms()
-
-    while True:
-        with box.lock:  # 加锁（互斥）
-            if len(box.data) < MAX_MAILBOX:
-                box.data.append(msg)
-                print(f"[发送{msg}] 成功")
-                return 0
-
-        # 邮箱满后的处理
-        if option == NO_WAIT:
-            print(f"[发送{msg}] 邮箱满 -> 立即失败")
-            return -1
-
-        if option == BUFFER_MSG:
-            print(f"[发送{msg}] 邮箱满 -> 缓存消息")
-            return 1
-
-        if option == WAIT_TIMEOUT:
-            if current_ms() - start >= timeout_ms:
-                print(f"[发送{msg}] 超时失败")
-                return -1
-            print(f"[发送{msg}] 等待中...")
-            time.sleep(0.2)
-
-        if option == WAIT_FOREVER:
-            print(f"[发送{msg}] 阻塞等待...")
-            time.sleep(0.2)
-
-# 接收线程
-def receiver():
+# 售货员（生产者）
+def seller():
     global running
     while running:
-        with box.lock:
-            if len(box.data) > 0:
-                msg = box.data.pop(0)
-                print(f">>> 接收消息: {msg}")
+        with shelf.lock:
+            if shelf.milk < MAX_SHELF:
+                shelf.milk += 1
+                print(f"[售货员] 补充1瓶牛奶，当前库存: {shelf.milk}")
+            else:
+                print("[售货员] 货架满了，暂不补货")
 
-        time.sleep(0.5)
+        time.sleep(0.2)  # 模拟摆放时间
 
-    print("receiver 退出")
 
-# 发送线程
-def sender():
+# 学生（消费者）
+def student(name):
     global running
-    time.sleep(1)
+    while running:
+        with shelf.lock:
+            if shelf.milk > 0:
+                shelf.milk -= 1
+                print(f"[{name}] 买了一瓶牛奶，剩余: {shelf.milk}")
+            else:
+                print(f"[{name}] 没牛奶了，在等待...")
 
-    mach_msg_sim(1, WAIT_FOREVER)
-    mach_msg_sim(2, WAIT_FOREVER)
-    mach_msg_sim(3, WAIT_FOREVER)
+        time.sleep(random.uniform(0.5, 1.5))  # 模拟购买间隔
 
-    mach_msg_sim(4, NO_WAIT)
-    mach_msg_sim(5, WAIT_TIMEOUT, 1000)
-    mach_msg_sim(6, BUFFER_MSG)
 
-    mach_msg_sim(7, WAIT_FOREVER)
-
-    time.sleep(3)
-    running = False  # 通知退出
-
-# 主函数
 def main():
-    t1 = threading.Thread(target=receiver)
-    t2 = threading.Thread(target=sender)
+    global running
 
-    t1.start()
-    t2.start()
+    t_seller = threading.Thread(target=seller)
+    t_stu1 = threading.Thread(target=student, args=("学生A",))
+    t_stu2 = threading.Thread(target=student, args=("学生B",))
 
-    t1.join()
-    t2.join()
+    t_seller.start()
+    t_stu1.start()
+    t_stu2.start()
+
+    time.sleep(10)  # 运行10秒
+    running = False
+
+    t_seller.join()
+    t_stu1.join()
+    t_stu2.join()
 
     print("程序结束")
+
 
 if __name__ == "__main__":
     main()
