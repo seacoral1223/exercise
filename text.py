@@ -13,4 +13,5 @@ user_0 = {
 			'last': 'fermi',
 			}
 for key,value in user_0.items():
-    print("\nkey:"+ key,"\nvalue:"+ value)
+    #print("\nkey:"+ key,"\nvalue:"+ value)
+	print(key,value)
