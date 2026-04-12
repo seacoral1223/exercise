@@ -4,7 +4,7 @@ import json
 
 def test_get():
     print("--- 正在测试 GET 请求 ---")
-    url = "http://localhost:8000/test_path?name=feixue"
+    url = "http://localhost:8001"
 
     try:
         # 1. 发起请求并获取响应
@@ -21,7 +21,7 @@ def test_get():
 
 def test_post():
     print("\n--- 正在测试 POST 请求 ---")
-    url = "http://localhost:8000/predict"
+    url = "http://localhost:8001"
 
     # 2. 准备要发送的数据（JSON 格式）
     data = {"model": "cat_dog_recognition", "action": "predict", "id": 123}
