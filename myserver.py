@@ -11,7 +11,8 @@ class MyRequestHandler(BaseHTTPRequestHandler):
 
         res = ("你好吗？")
 
-        self.wfile.write(res.encode("utf-8"))
+        self.wfile.write(json.dumps(res).encode("utf-8"))
+        # self.wfile.write(res.encode("utf-8"))
 
     def do_POST(self):
         content_text_size = int(self.headers['Content-Length'])
@@ -28,6 +29,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             res = "我已收到数据"
             self.wfile.write(json.dumps(res).encode("utf-8"))
+            # self.wfile.write(res.encode("utf-8"))
         except Exception as e:
             print("数据解析失败：", e)
 
