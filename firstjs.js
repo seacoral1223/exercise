@@ -8,12 +8,13 @@ console.log("Hello, World!");
 // == === != !== > < >= <= #比较运算符
 // && || ! #逻辑运算符
 // = += -= *= /= %= #赋值运算符
+
 let flag = 0;
-for (let i = 2 ; i < 100 ; i ++){
-	for ( j = 2; j < i ; j ++ ) {
+for (let i = 1; i < 100; i ++) {
+	for (j = 2; j < i; j ++) {
 		if (i % j === 0) {
 			flag = 0
-			break	
+			break
 		} else {
 			flag = 1
 		}
@@ -22,3 +23,6 @@ for (let i = 2 ; i < 100 ; i ++){
 		console.log(i)
 	}
 }
+
+
+document.write("这是一个标题");
