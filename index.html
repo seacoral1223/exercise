@@ -1,38 +1,272 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>DevToolkit</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多功能在线工具箱</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 CryptoJS 用于加解密 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        body { background-color: #f8fafc; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .tool-card { transition: all 0.2s ease; }
+        .tab-active { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+        textarea { resize: vertical; min-height: 120px; }
+    </style>
 </head>
-<body class="bg-slate-50 p-6">
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto">
+        <!-- 头部 -->
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">多功能在线工具箱</h1>
+            <p class="text-gray-600">包含加密、解密、CTF、编码转换等实用开发与安全工具</p>
+        </header>
 
-<h1 class="text-2xl font-bold mb-4">DevToolkit（简化版）</h1>
+        <!-- 导航标签页 -->
+        <div class="flex flex-wrap border-b border-gray-200 mb-6 bg-white rounded-t-lg px-4">
+            <button onclick="switchTab('crypto')" id="tab-crypto" class="px-6 py-3 font-medium tab-active">加密/解密</button>
+            <button onclick="switchTab('encoding')" id="tab-encoding" class="px-6 py-3 font-medium text-gray-500 hover:text-blue-500">编码转换</button>
+            <button onclick="switchTab('ctf')" id="tab-ctf" class="px-6 py-3 font-medium text-gray-500 hover:text-blue-500">CTF/其它</button>
+            <button onclick="switchTab('hash')" id="tab-hash" class="px-6 py-3 font-medium text-gray-500 hover:text-blue-500">哈希计算</button>
+        </div>
 
-<textarea id="input" class="w-full p-3 border rounded mb-3" placeholder="输入内容"></textarea>
+        <!-- 内容区域 -->
+        <div class="bg-white p-6 rounded-b-lg shadow-sm">
+            
+            <!-- 加密/解密面板 -->
+            <div id="panel-crypto" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">输入数据</label>
+                        <textarea id="crypto-input" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="输入待处理文本..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">输出结果</label>
+                        <textarea id="crypto-output" readonly class="w-full p-3 border rounded-lg bg-gray-50" placeholder="结果将显示在这里..."></textarea>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-4 bg-blue-50 p-4 rounded-lg">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium">算法:</span>
+                        <select id="crypto-algo" class="p-2 border rounded bg-white">
+                            <option value="AES">AES</option>
+                            <option value="DES">DES</option>
+                            <option value="Rabbit">Rabbit</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 flex-grow">
+                        <span class="text-sm font-medium">密钥:</span>
+                        <input type="text" id="crypto-key" class="p-2 border rounded flex-grow" placeholder="输入Key...">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="runCrypto('encrypt')" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">加密</button>
+                        <button onclick="runCrypto('decrypt')" class="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700">解密</button>
+                    </div>
+                </div>
+            </div>
 
-<div class="flex gap-2 mb-3">
-  <button onclick="b64e()" class="bg-blue-500 text-white px-3 py-1 rounded">Base64编码</button>
-  <button onclick="b64d()" class="bg-green-500 text-white px-3 py-1 rounded">Base64解码</button>
-</div>
+            <!-- 编码转换面板 -->
+            <div id="panel-encoding" class="hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <textarea id="enc-input" class="w-full p-3 border rounded-lg" placeholder="输入内容..."></textarea>
+                    <textarea id="enc-output" class="w-full p-3 border rounded-lg bg-gray-50" placeholder="结果..."></textarea>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button onclick="runEncoding('b64enc')" class="p-2 bg-gray-100 rounded hover:bg-gray-200">Base64 编码</button>
+                    <button onclick="runEncoding('b64dec')" class="p-2 bg-gray-100 rounded hover:bg-gray-200">Base64 解码</button>
+                    <button onclick="runEncoding('urlenc')" class="p-2 bg-gray-100 rounded hover:bg-gray-200">URL 编码</button>
+                    <button onclick="runEncoding('urldec')" class="p-2 bg-gray-100 rounded hover:bg-gray-200">URL 解码</button>
+                    <button onclick="runEncoding('unienc')" class="p-2 bg-gray-100 rounded hover:bg-gray-200">Unicode 编码</button>
+                    <button onclick="runEncoding('unidec')" class="p-2 bg-gray-100 rounded hover:bg-gray-200">Unicode 解码</button>
+                    <button onclick="runEncoding('hexenc')" class="p-2 bg-gray-100 rounded hover:bg-gray-200">Hex 编码</button>
+                    <button onclick="runEncoding('hexdec')" class="p-2 bg-gray-100 rounded hover:bg-gray-200">Hex 解码</button>
+                </div>
+            </div>
 
-<textarea id="output" class="w-full p-3 border rounded" placeholder="输出结果"></textarea>
+            <!-- CTF 面板 -->
+            <div id="panel-ctf" class="hidden space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- 进制转换 -->
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-bold mb-3 border-b pb-2 text-blue-600">进制转换器</h3>
+                        <div class="space-y-3">
+                            <div><span class="text-xs uppercase text-gray-500">10进制</span><input type="text" id="num-10" oninput="convertBase(10)" class="w-full p-2 border rounded"></div>
+                            <div><span class="text-xs uppercase text-gray-500">2进制</span><input type="text" id="num-2" oninput="convertBase(2)" class="w-full p-2 border rounded"></div>
+                            <div><span class="text-xs uppercase text-gray-500">16进制</span><input type="text" id="num-16" oninput="convertBase(16)" class="w-full p-2 border rounded"></div>
+                        </div>
+                    </div>
+                    <!-- 其它常用 -->
+                    <div class="p-4 border rounded-lg">
+                        <h3 class="font-bold mb-3 border-b pb-2 text-purple-600">实用功能</h3>
+                        <div class="space-y-4">
+                            <button onclick="generatePassword()" class="w-full py-2 bg-purple-100 text-purple-700 rounded hover:bg-purple-200">生成强随机密码</button>
+                            <div class="flex gap-2">
+                                <input id="morse-input" type="text" class="flex-grow p-2 border rounded text-sm" placeholder="文本或莫尔斯(. -)">
+                                <button onclick="morse(true)" class="px-3 bg-gray-200 rounded text-sm">转码</button>
+                                <button onclick="morse(false)" class="px-3 bg-gray-200 rounded text-sm">解码</button>
+                            </div>
+                            <div id="ctf-tool-res" class="p-2 bg-yellow-50 text-xs break-all min-h-[40px] rounded border border-yellow-100 text-yellow-800">结果预览...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<script>
-function b64e() {
-  const text = document.getElementById("input").value;
-  document.getElementById("output").value = btoa(unescape(encodeURIComponent(text)));
-}
+            <!-- 哈希计算面板 -->
+            <div id="panel-hash" class="hidden space-y-6">
+                <textarea id="hash-input" class="w-full p-3 border rounded-lg" placeholder="输入要计算摘要的文本..." oninput="calculateHashes()"></textarea>
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="flex items-center p-3 bg-gray-50 rounded">
+                        <span class="w-24 font-mono font-bold text-sm">MD5:</span>
+                        <span id="md5-res" class="font-mono text-sm break-all"></span>
+                    </div>
+                    <div class="flex items-center p-3 bg-gray-50 rounded">
+                        <span class="w-24 font-mono font-bold text-sm">SHA-1:</span>
+                        <span id="sha1-res" class="font-mono text-sm break-all"></span>
+                    </div>
+                    <div class="flex items-center p-3 bg-gray-50 rounded">
+                        <span class="w-24 font-mono font-bold text-sm">SHA-256:</span>
+                        <span id="sha256-res" class="font-mono text-sm break-all"></span>
+                    </div>
+                    <div class="flex items-center p-3 bg-gray-50 rounded">
+                        <span class="w-24 font-mono font-bold text-sm">SHA-512:</span>
+                        <span id="sha512-res" class="font-mono text-sm break-all"></span>
+                    </div>
+                </div>
+            </div>
 
-function b64d() {
-  const text = document.getElementById("input").value;
-  try {
-    document.getElementById("output").value = decodeURIComponent(escape(atob(text)));
-  } catch {
-    alert("解码失败");
-  }
-}
-</script>
+        </div>
 
+        <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded shadow-lg opacity-0 transition-opacity pointer-events-none">已复制到剪贴板</div>
+    </div>
+
+    <script>
+        // 标签切换
+        function switchTab(tab) {
+            const tabs = ['crypto', 'encoding', 'ctf', 'hash'];
+            tabs.forEach(t => {
+                document.getElementById('panel-' + t).classList.add('hidden');
+                document.getElementById('tab-' + t).classList.remove('tab-active');
+                document.getElementById('tab-' + t).classList.add('text-gray-500');
+            });
+            document.getElementById('panel-' + tab).classList.remove('hidden');
+            document.getElementById('tab-' + tab).classList.add('tab-active');
+            document.getElementById('tab-' + tab).classList.remove('text-gray-500');
+        }
+
+        // 核心加解密
+        function runCrypto(mode) {
+            const input = document.getElementById('crypto-input').value;
+            const key = document.getElementById('crypto-key').value;
+            const algo = document.getElementById('crypto-algo').value;
+            const output = document.getElementById('crypto-output');
+
+            if (!input || !key) {
+                showToast("请输入内容和密钥");
+                return;
+            }
+
+            try {
+                let result = "";
+                if (mode === 'encrypt') {
+                    result = CryptoJS[algo].encrypt(input, key).toString();
+                } else {
+                    const bytes = CryptoJS[algo].decrypt(input, key);
+                    result = bytes.toString(CryptoJS.enc.Utf8);
+                    if (!result) throw new Error("解密失败，请检查密钥或算法");
+                }
+                output.value = result;
+            } catch (e) {
+                output.value = "错误: " + e.message;
+            }
+        }
+
+        // 编码转换
+        function runEncoding(type) {
+            const input = document.getElementById('enc-input').value;
+            const output = document.getElementById('enc-output');
+            try {
+                switch(type) {
+                    case 'b64enc': output.value = btoa(unescape(encodeURIComponent(input))); break;
+                    case 'b64dec': output.value = decodeURIComponent(escape(atob(input))); break;
+                    case 'urlenc': output.value = encodeURIComponent(input); break;
+                    case 'urldec': output.value = decodeURIComponent(input); break;
+                    case 'unienc': output.value = input.replace(/[^\u0000-\u007F]/g, c => "\\u" + ("000" + c.charCodeAt(0).toString(16)).slice(-4)); break;
+                    case 'unidec': output.value = JSON.parse('"' + input.replace(/"/g, '\\"') + '"'); break;
+                    case 'hexenc': output.value = Array.from(new TextEncoder().encode(input)).map(b => b.toString(16).padStart(2, '0')).join(''); break;
+                    case 'hexdec': 
+                        const bytes = new Uint8Array(input.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                        output.value = new TextDecoder().decode(bytes);
+                        break;
+                }
+            } catch (e) {
+                output.value = "转换出错，请检查输入格式";
+            }
+        }
+
+        // 进制转换
+        function convertBase(base) {
+            const val = document.getElementById('num-' + base).value;
+            if (!val) return;
+            const decimal = parseInt(val, base);
+            if (isNaN(decimal)) return;
+            
+            if (base !== 10) document.getElementById('num-10').value = decimal.toString(10);
+            if (base !== 2) document.getElementById('num-2').value = decimal.toString(2);
+            if (base !== 16) document.getElementById('num-16').value = decimal.toString(16).toUpperCase();
+        }
+
+        // 哈希计算
+        function calculateHashes() {
+            const input = document.getElementById('hash-input').value;
+            if (!input) {
+                ['md5', 'sha1', 'sha256', 'sha512'].forEach(id => document.getElementById(id + '-res').innerText = "");
+                return;
+            }
+            document.getElementById('md5-res').innerText = CryptoJS.MD5(input).toString();
+            document.getElementById('sha1-res').innerText = CryptoJS.SHA1(input).toString();
+            document.getElementById('sha256-res').innerText = CryptoJS.SHA256(input).toString();
+            document.getElementById('sha512-res').innerText = CryptoJS.SHA512(input).toString();
+        }
+
+        // 随机密码生成
+        function generatePassword() {
+            const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+";
+            let retVal = "";
+            for (let i = 0; i < 16; ++i) {
+                retVal += charset.charAt(Math.floor(Math.random() * charset.length));
+            }
+            const res = document.getElementById('ctf-tool-res');
+            res.innerText = retVal;
+            // 自动复制
+            const el = document.createElement('textarea');
+            el.value = retVal;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("密码已生成并复制");
+        }
+
+        // 莫尔斯电码 (简易版)
+        const MORSE_MAP = {'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.', 'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..', 'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.', 'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-', 'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..', '9': '----.', '0': '-----', ' ': '/'};
+        const REVERSE_MORSE = Object.fromEntries(Object.entries(MORSE_MAP).map(([k, v]) => [v, k]));
+
+        function morse(encode) {
+            const input = document.getElementById('morse-input').value.toUpperCase();
+            const res = document.getElementById('ctf-tool-res');
+            if (encode) {
+                res.innerText = input.split('').map(c => MORSE_MAP[c] || c).join(' ');
+            } else {
+                res.innerText = input.split(' ').map(c => REVERSE_MORSE[c] || c).join('');
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.style.opacity = '1';
+            setTimeout(() => t.style.opacity = '0', 2000);
+        }
+    </script>
 </body>
 </html>
