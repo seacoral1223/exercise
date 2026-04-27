@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的世界 | Creative Space</title>
+    <!-- 引入 Tailwind CSS 进行快速样式设计 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 FontAwesome 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans SC"', 'sans-serif'],
+                    },
+                    colors: {
+                        glass: "rgba(255, 255, 255, 0.7)", // 浅色玻璃
+                        glassHover: "rgba(255, 255, 255, 0.9)",
+                        darkText: "#1e293b", // Slate 800
+                        lightText: "#64748b", // Slate 500
+                        accent: "#8b5cf6", // Violet
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-20px)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f8fafc; /* 浅色背景 Slate 50 */
+            color: #1e293b; /* 深色文字 */
+            overflow-x: hidden;
+        }
+
+        /* 动态背景球体 - 颜色调淡以适应浅色主题 */
+        .bg-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+        }
+        .orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: #ddd6fe; animation: float 8s infinite alternate; } /* Violet 200 */
+        .orb-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: #ccfbf1; animation: float 10s infinite alternate-reverse; } /* Teal 100 */
+        .orb-3 { top: 40%; left: 40%; width: 30vw; height: 30vw; background: #fbcfe8; opacity: 0.3; animation: float 12s infinite alternate; } /* Pink 200 */
+
+        /* 浅色磨砂玻璃效果 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 滚动条美化 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        .typing-cursor::after {
+            content: '|';
+            animation: blink 1s step-end infinite;
+            color: #8b5cf6;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="font-sans antialiased relative min-h-screen flex flex-col text-slate-800">
+
+    <!-- 动态背景元素 -->
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+    <div class="bg-orb orb-3"></div>
+
+    <!-- 导航栏 -->
+    <nav class="fixed w-full z-50 glass-panel border-b border-white/40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0 font-bold text-2xl tracking-wider text-slate-800">
+                    <i class="fa-solid fa-rocket mr-2 text-purple-600"></i>MY<span class="text-purple-600">SPACE</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-8">
+                        <a href="#home" class="text-slate-600 hover:text-purple-600 transition-colors px-3 py-2 rounded-md text-sm font-medium">首页</a>
+                        <a href="#photos" class="text-slate-600 hover:text-purple-600 transition-colors px-3 py-2 rounded-md text-sm font-medium">相册</a>
+                        <a href="#contact" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-all shadow-lg hover:shadow-purple-500/30">联系我</a>
+                        <!-- 留言板链接已移除 -->
+                    </div>
+                </div>
+                <!-- 移动端菜单按钮 (简化版) -->
+                <div class="md:hidden">
+                    <button class="text-slate-500 hover:text-slate-800">
+                        <i class="fa-solid fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 首页 Hero 区域 (修改：头像左置布局) -->
+    <section id="home" class="flex-grow flex items-center justify-center pt-32 pb-12 px-4 sm:px-6 lg:px-8 min-h-screen">
+        <!-- 容器改为 flex-row 以实现左右布局，items-start 实现顶部对齐 -->
+        <div class="max-w-6xl w-full flex flex-col md:flex-row items-center md:items-start gap-12">
+            
+            <!-- 头像区域 (左侧) -->
+            <div class="flex-shrink-0 relative group">
+                <div class="absolute -inset-2 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full blur opacity-60 group-hover:opacity-100 transition duration-500"></div>
+                <img class="relative w-48 h-48 md:w-64 md:h-64 rounded-full border-4 border-white object-cover shadow-2xl transform transition duration-500 group-hover:scale-105" 
+                    src="face.jpg" 
+                    alt="Avatar"
+                    onerror="this.onerror=null; this.src='https://placehold.co/256x256/8B5CF6/ffffff?text=Avatar';">
+                <div class="absolute bottom-4 right-4 w-8 h-8 bg-green-500 border-4 border-white rounded-full flex items-center justify-center shadow-md" title="Online">
+                    <i class="fa-solid fa-check text-white text-xs"></i>
+                </div>
+            </div>
+            
+            <!-- 文本区域 (右侧) -->
+            <div class="flex-1 text-center md:text-left pt-4">
+                <div class="inline-block px-3 py-1 mb-4 text-xs font-semibold tracking-wider text-purple-600 uppercase bg-purple-100 rounded-full">
+                    Welcome to my world
+                </div>
+                <h1 class="text-5xl md:text-7xl font-extrabold text-slate-800 mb-4 tracking-tight">
+                    I am<br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600" id="name-placeholder">Seacoral</span>
+                </h1>
+                <p class="mt-2 text-2xl text-slate-600 h-10 typing-cursor font-light">
+                    <span id="typing-text"></span>
+                </p>
+                <p class="mt-6 text-lg text-slate-500 leading-relaxed max-w-2xl">
+                    欢迎来到我的世界。
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 mt-8 justify-center md:justify-start">
+                    <a href="#contact" class="bg-slate-800 text-white px-8 py-3 rounded-full hover:bg-slate-700 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl">
+                        <i class="fa-regular fa-paper-plane"></i> 我的联系方式
+                    </a>
+                    <a href="#photos" class="glass-panel text-slate-700 px-8 py-3 rounded-full border border-slate-200 hover:bg-white transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-camera text-purple-500"></i> 照片墙
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 照片墙区域 -->
+    <section id="photos" class="py-20 px-4 sm:px-6 lg:px-8 bg-slate-50/50">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-12 flex items-center justify-center gap-3 text-slate-800">
+                <i class="fa-solid fa-images text-purple-600"></i> my life
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- 照片卡片样式更新 -->
+                <div class="glass-panel rounded-2xl overflow-hidden group cursor-pointer relative h-72 shadow-md hover:shadow-xl transition-all">
+                    <img src="HEq9NSSbEAAwU3O.jpg" 
+                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                         alt="Photo 1"
+                         onerror="this.onerror=null; this.src='https://placehold.co/1000x1000/F472B6/ffffff?text=Travel';">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <h3 class="text-xl font-bold text-white">张雪</h3>
+                        <p class="text-sm text-gray-200">张雪机车夺冠</p>
+                    </div>
+                </div>
+                <div class="glass-panel rounded-2xl overflow-hidden group cursor-pointer relative h-72 shadow-md hover:shadow-xl transition-all">
+                    <img src="nyq.jpg" 
+                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                         alt="Photo 2"
+                         onerror="this.onerror=null; this.src='https://placehold.co/1000x1000/F472B6/ffffff?text=Tech';">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <h3 class="text-xl font-bold text-white">friend</h3>
+                        <p class="text-sm text-gray-200">来自牛亚琪</p>
+                    </div>
+                </div>
+                <div class="glass-panel rounded-2xl overflow-hidden group cursor-pointer relative h-72 shadow-md hover:shadow-xl transition-all">
+                    <img src="sunset.jpg" 
+                         class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                         alt="Photo 3"
+                         onerror="this.onerror=null; this.src='https://placehold.co/1000x1000/F472B6/ffffff?text=Code';">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-6">
+                        <h3 class="text-xl font-bold text-white">落日</h3>
+                        <p class="text-sm text-gray-200">残存的温柔</p>
+                    </div>
+                </div>
+                <!-- 更多照片占位 -->
+                <div class="glass-panel rounded-2xl overflow-hidden group cursor-pointer relative h-72 flex items-center justify-center bg-white/40 border-dashed border-2 border-slate-300 hover:border-purple-400 transition-colors">
+                    <div class="text-center group-hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-plus text-4xl text-slate-400 mb-2"></i>
+                        <p class="text-slate-500">更多照片加载中...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 联系与社交功能区 -->
+    <section id="contact" class="py-20 relative mb-20">
+        <div class="max-w-5xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12 text-slate-800">我的联系方式</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- 微信 -->
+                <div onclick="toggleWechatModal()" class="glass-panel p-8 rounded-2xl text-center hover:bg-green-50/80 transition-all cursor-pointer group border-t-4 border-green-500 shadow-sm hover:shadow-lg hover:-translate-y-1">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-500 transition-colors">
+                        <i class="fa-brands fa-weixin text-2xl text-green-600 group-hover:text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 text-slate-800">加我微信</h3>
+                    <p class="text-sm text-slate-500">点击查看二维码 / ID</p>
+                </div>
+
+                <!-- QQ -->
+                <div onclick="handleQQClick()" class="glass-panel p-8 rounded-2xl text-center hover:bg-blue-50/80 transition-all cursor-pointer group border-t-4 border-blue-500 shadow-sm hover:shadow-lg hover:-translate-y-1">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-500 transition-colors">
+                        <i class="fa-brands fa-qq text-2xl text-blue-600 group-hover:text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 text-slate-800">QQ 交谈</h3>
+                    <p class="text-sm text-slate-500">点击一键复制或跳转</p>
+                </div>
+
+                <!-- 邮箱 -->
+                <a href="mailto:seacoralz@qq.com" class="glass-panel p-8 rounded-2xl text-center hover:bg-yellow-50/80 transition-all cursor-pointer group border-t-4 border-yellow-500 block shadow-sm hover:shadow-lg hover:-translate-y-1">
+                    <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-yellow-500 transition-colors">
+                        <i class="fa-regular fa-envelope text-2xl text-yellow-600 group-hover:text-white"></i>
+                    </div>
+                    <h3 class="text-xl font-bold mb-2 text-slate-800">发送邮件</h3>
+                    <p class="text-sm text-slate-500">欢迎商业合作与交流</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 留言板功能区已移除 -->
+
+    <!-- 底部 Footer -->
+    <footer class="glass-panel mt-auto py-8 text-center border-t border-white/40">
+        <p class="text-slate-500 text-sm">© 2023 Seacoral's Creative Space. All Rights Reserved.</p>
+        <div class="mt-4 flex justify-center space-x-6">
+            <a href="#" class="text-slate-400 hover:text-slate-800 transition-colors"><i class="fa-brands fa-github text-xl"></i></a>
+            <a href="#" class="text-slate-400 hover:text-slate-800 transition-colors"><i class="fa-brands fa-twitter text-xl"></i></a>
+            <a href="#" class="text-slate-400 hover:text-slate-800 transition-colors"><i class="fa-brands fa-instagram text-xl"></i></a>
+        </div>
+    </footer>
+
+    <!-- 悬浮小组件：音乐播放器 UI -->
+    <div class="fixed bottom-6 right-6 glass-panel p-3 rounded-full flex items-center gap-3 shadow-2xl z-40 animate-pulse-slow cursor-pointer hover:bg-white transition-colors border border-slate-200" title="播放音乐 (Demo)">
+        <div class="w-8 h-8 bg-slate-800 rounded-full flex items-center justify-center animate-spin" style="animation-duration: 3s;">
+            <i class="fa-solid fa-music text-xs text-white"></i>
+        </div>
+        <div class="hidden md:block pr-2">
+            <p class="text-xs font-bold text-slate-800">Chill Lo-Fi</p>
+            <p class="text-[10px] text-slate-500">正在播放...</p>
+        </div>
+    </div>
+
+    <!-- 微信二维码弹窗 (Modal) - 浅色优化 -->
+    <div id="wechatModal" class="fixed inset-0 z-[100] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="fixed inset-0 bg-slate-900/50 transition-opacity backdrop-blur-sm" onclick="toggleWechatModal()"></div>
+        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <div class="relative transform overflow-hidden rounded-2xl glass-panel bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-sm border border-slate-200">
+                <div class="p-6 text-center">
+                    <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-4">
+                        <i class="fa-brands fa-weixin text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold leading-6 text-slate-800 mb-2" id="modal-title">扫一扫加好友</h3>
+                    <!-- 二维码占位图 -->
+                    <div class="bg-slate-100 p-2 rounded-lg inline-block mb-4 border border-slate-200">
+                        <!-- 注意：使用 placeholder 链接作为图片资源的 Fallback，原图链接保留 -->
+                        <img src="wxQR.jpg" 
+                             alt="WeChat QR" 
+                             class="w-40 h-40"
+                             onerror="this.onerror=null; this.src='https://placehold.co/160x160/10B981/ffffff?text=WeChat+QR';">
+                    </div>
+                    <p class="text-sm text-slate-500">微信号:Z27839 <span class="font-mono text-green-600 font-bold select-all">Z27839</span></p>
+                    <p class="text-xs text-slate-400 mt-1">(点击微信号可复制)</p>
+                </div>
+                <div class="px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 bg-slate-50">
+                    <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto" onclick="toggleWechatModal()">关闭</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 提示框 (Toast) - 浅色优化 -->
+    <div id="toast" class="fixed top-20 right-5 transform translate-x-full transition-transform duration-300 z-50 bg-white border-l-4 border-green-500 px-6 py-4 rounded shadow-xl flex items-center">
+        <i class="fa-solid fa-check-circle text-green-500 mr-3"></i>
+        <span id="toastMsg" class="text-slate-700 font-medium">操作成功</span>
+    </div>
+
+    <script>
+        // --- 1. 打字机特效 ---
+        const texts = ["一川烟草，满城风絮，梅子黄时雨", "与人间寥寥月色，长眠一场", "路虽远，行则将至", "Just listen to the wind and wait for the flowers to bloom."];
+        let count = 0;
+        let index = 0;
+        let currentText = "";
+        let letter = "";
+
+        (function type() {
+            if (count === texts.length) {
+                count = 0;
+            }
+            currentText = texts[count];
+            letter = currentText.slice(0, ++index);
+
+            document.getElementById("typing-text").textContent = letter;
+
+            if (letter.length === currentText.length) {
+                count++;
+                index = 0;
+                setTimeout(type, 2000); // 停顿 2 秒
+            } else {
+                setTimeout(type, 100); // 打字速度
+            }
+        })();
+
+        // --- 2. 微信模态框控制 ---
+        function toggleWechatModal() {
+            const modal = document.getElementById('wechatModal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+            } else {
+                modal.classList.add('hidden');
+            }
+        }
+
+        // --- 3. QQ 点击处理 (复制 ID) ---
+        function handleQQClick() {
+            const qqId = "3206139323"; // 这里替换成你的QQ
+            // 使用 document.execCommand('copy') 作为 iframe 内复制文本的兼容方法
+            const tempInput = document.createElement('textarea');
+            tempInput.value = qqId;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            
+            showToast(`QQ号 ${qqId} 已复制到剪贴板！`);
+        }
+
+        // --- 4. Toast 提示框 ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMsg');
+            toastMsg.textContent = message;
+            toast.classList.remove('translate-x-full');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3000);
+        }
+
+        // --- 5. 平滑滚动修正 (处理 fixed header 遮挡) ---
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                // 确保目标元素存在
+                if (!targetElement) return;
+
+                const headerOffset = 80;
+                const elementPosition = targetElement.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: "smooth"
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+import React, { useState, useEffect } from 'react';
+import { 
+  Hash, 
+  Code, 
+  ShieldCheck, 
+  Binary, 
+  Copy, 
+  Trash2, 
+  Settings, 
+  ChevronRight,
+  Lock,
+  RefreshCw
+} from 'lucide-react';
+
+const App = () => {
+  const [activeTab, setActiveTab] = useState('encoding');
+  const [inputText, setInputText] = useState('');
+  const [outputText, setOutputText] = useState('');
+  const [toast, setToast] = useState({ show: false, msg: '' });
+
+  // 1. 编码转换函数
+  const handleEncoding = (type) => {
+    try {
+      let result = '';
+      switch (type) {
+        case 'b64e':
+          const bytes = new TextEncoder().encode(inputText);
+          const binString = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
+          result = btoa(binString);
+          break;
+        case 'b64d':
+          const bin = atob(inputText);
+          const b = Uint8Array.from(bin, (m) => m.charCodeAt(0));
+          result = new TextDecoder().decode(b);
+          break;
+        case 'urle': result = encodeURIComponent(inputText); break;
+        case 'urld': result = decodeURIComponent(inputText); break;
+        case 'hexe':
+          result = Array.from(new TextEncoder().encode(inputText))
+            .map(b => b.toString(16).padStart(2, '0')).join('');
+          break;
+        case 'hexd':
+          const matches = inputText.match(/.{1,2}/g);
+          if (!matches) throw new Error("无效的 Hex 格式");
+          const hbytes = new Uint8Array(matches.map(byte => parseInt(byte, 16)));
+          result = new TextDecoder().decode(hbytes);
+          break;
+        default: break;
+      }
+      setOutputText(result);
+    } catch (e) {
+      showToast("操作失败: " + e.message);
+    }
+  };
+
+  // 2. 进制转换状态
+  const [bases, setBases] = useState({ 2: '', 8: '', 10: '', 16: '' });
+  const handleBaseConvert = (val, fromBase) => {
+    if (!val) {
+      setBases({ 2: '', 8: '', 10: '', 16: '' });
+      return;
+    }
+    try {
+      const num = BigInt(`0x${fromBase === 16 ? val : parseInt(val, fromBase).toString(16)}`);
+      setBases({
+        2: num.toString(2),
+        8: num.toString(8),
+        10: num.toString(10),
+        16: num.toString(16).toUpperCase()
+      });
+    } catch (e) {}
+  };
+
+  // 3. 密码生成
+  const genPassword = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    let pass = "";
+    const array = new Uint32Array(16);
+    window.crypto.getRandomValues(array);
+    for (let i = 0; i < 16; i++) {
+      pass += chars.charAt(array[i] % chars.length);
+    }
+    setOutputText(pass);
+    showToast("已生成强密码并填入输出框");
+  };
+
+  // 4. 凯撒密码
+  const runCaesar = (shift) => {
+    let res = "";
+    for (let i = 0; i < inputText.length; i++) {
+      let char = inputText[i];
+      if (char.match(/[a-z]/i)) {
+        const code = inputText.charCodeAt(i);
+        let base = (code >= 65 && code <= 90) ? 65 : 97;
+        char = String.fromCharCode(((code - base + shift + 26) % 26) + base);
+      }
+      res += char;
+    }
+    setOutputText(res);
+  };
+
+  // 通用功能
+  const showToast = (msg) => {
+    setToast({ show: true, msg });
+    setTimeout(() => setToast({ show: false, msg: '' }), 2000);
+  };
+
+  const copyToClipboard = (text) => {
+    const el = document.createElement('textarea');
+    el.value = text;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showToast("已复制到剪贴板");
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 p-4 md:p-8 font-sans">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <header className="mb-8 text-center md:text-left flex flex-col md:flex-row md:items-end gap-2">
+          <h1 className="text-3xl font-bold text-blue-600 flex items-center gap-2">
+            <ShieldCheck className="w-8 h-8" /> DevToolkit
+          </h1>
+          <p className="text-slate-500 font-medium">开发者 & CTF 在线工具箱 (React版)</p>
+        </header>
+
+        {/* Tab Navigation */}
+        <nav className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200 mb-6 overflow-x-auto no-scrollbar">
+          {[
+            { id: 'encoding', label: '编码转换', icon: Code },
+            { id: 'binary', label: '进制转换', icon: Binary },
+            { id: 'ctf', label: 'CTF/加密', icon: Lock },
+            { id: 'about', label: '关于', icon: Settings },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${
+                activeTab === tab.id 
+                ? 'bg-blue-600 text-white shadow-md' 
+                : 'text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              <tab.icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+
+        {/* Content Area */}
+        <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden min-h-[500px]">
+          
+          {/* 统一的输入输出框 (针对编码和加密) */}
+          {(activeTab === 'encoding' || activeTab === 'ctf') && (
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="relative">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Input 数据输入</label>
+                  <textarea
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    className="w-full h-48 p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all font-mono text-sm"
+                    placeholder="在此输入待处理内容..."
+                  />
+                  <button 
+                    onClick={() => setInputText('')}
+                    className="absolute top-8 right-2 p-2 text-slate-300 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+                <div className="relative">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Output 处理结果</label>
+                  <textarea
+                    readOnly
+                    value={outputText}
+                    className="w-full h-48 p-4 bg-blue-50/30 border border-blue-100 rounded-xl font-mono text-sm text-blue-900"
+                    placeholder="结果将在这里显示..."
+                  />
+                  <button 
+                    onClick={() => copyToClipboard(outputText)}
+                    className="absolute top-8 right-2 p-2 text-blue-300 hover:text-blue-600 transition-colors"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 功能按钮区 */}
+              {activeTab === 'encoding' && (
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                  <button onClick={() => handleEncoding('b64e')} className="btn-action">Base64 编码</button>
+                  <button onClick={() => handleEncoding('b64d')} className="btn-action">Base64 解码</button>
+                  <button onClick={() => handleEncoding('urle')} className="btn-action">URL 编码</button>
+                  <button onClick={() => handleEncoding('urld')} className="btn-action">URL 解码</button>
+                  <button onClick={() => handleEncoding('hexe')} className="btn-action">Hex 编码</button>
+                  <button onClick={() => handleEncoding('hexd')} className="btn-action">Hex 解码</button>
+                </div>
+              )}
+
+              {activeTab === 'ctf' && (
+                <div className="flex flex-wrap gap-4 items-center bg-slate-50 p-4 rounded-xl">
+                  <div className="flex gap-2">
+                    <button onClick={() => runCaesar(1)} className="btn-action bg-white border">凯撒 +1</button>
+                    <button onClick={() => {
+                      let res = "";
+                      for(let s=1; s<26; s++) {
+                        let temp = "";
+                        for(let i=0; i<inputText.length; i++){
+                          let c = inputText[i];
+                          if(c.match(/[a-z]/i)){
+                            const code = inputText.charCodeAt(i);
+                            let base = (code>=65 && code<=90)?65:97;
+                            c = String.fromCharCode(((code-base+s)%26)+base);
+                          }
+                          temp += c;
+                        }
+                        res += `Shift ${s}: ${temp}\n`;
+                      }
+                      setOutputText(res);
+                    }} className="btn-action bg-white border">穷举凯撒</button>
+                  </div>
+                  <div className="h-6 w-px bg-slate-200"></div>
+                  <button onClick={genPassword} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                    <RefreshCw className="w-4 h-4" /> 生成随机强密码
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 进制转换面板 */}
+          {activeTab === 'binary' && (
+            <div className="p-8 max-w-lg mx-auto space-y-6">
+              {[10, 2, 16, 8].map((base) => (
+                <div key={base} className="group">
+                  <label className="block text-xs font-bold text-slate-400 mb-2">{base} 进制</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={bases[base]}
+                      onChange={(e) => handleBaseConvert(e.target.value, base)}
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-mono"
+                    />
+                    <button 
+                      onClick={() => copyToClipboard(bases[base])}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-blue-500"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* 关于面板 */}
+          {activeTab === 'about' && (
+            <div className="p-8 prose prose-slate max-w-none">
+              <h2 className="text-xl font-bold mb-4">关于本工具</h2>
+              <p className="text-slate-600 leading-relaxed">
+                这是一个完全运行在本地浏览器中的工具箱，旨在为开发者和 CTF 玩家提供快速便捷的编码转换和基础加密算法支持。
+              </p>
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-green-50 rounded-xl border border-green-100">
+                  <h4 className="text-green-800 font-bold mb-1">隐私保证</h4>
+                  <p className="text-green-600 text-sm">所有计算均在前端完成，绝不上传数据到服务器。</p>
+                </div>
+                <div className="p-4 bg-blue-50 rounded-xl border border-blue-100">
+                  <h4 className="text-blue-800 font-bold mb-1">Chrome 优化</h4>
+                  <p className="text-blue-600 text-sm">针对 V8 引擎进行了中文 Base64 编码的兼容性处理。</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <footer className="mt-8 text-center text-slate-400 text-sm">
+          &copy; 2024 DevToolkit Project. 纯 JS 无依赖运行.
+        </footer>
+      </div>
+
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl animate-bounce flex items-center gap-2">
+          <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+          {toast.msg}
+        </div>
+      )}
+
+      <style>{`
+        .btn-action {
+          padding: 8px 12px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 600;
+          background: #f1f5f9;
+          color: #475569;
+          transition: all 0.2s;
+          border: 1px solid transparent;
+          text-align: center;
+        }
+        .btn-action:hover {
+          background: #e2e8f0;
+          color: #1e293b;
+          border-color: #cbd5e1;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
