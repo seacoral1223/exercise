@@ -25,4 +25,11 @@ for (let i = 1; i < 100; i ++) {
 }
 
 
+x = 16 + "Volvo"
+console.log(x)
+
 document.write("这是一个标题");
+window.alert("cnzcnasj");
+document.write(Date());
+document.getElementById("demo").innerHTML = "段落已修改。";
+document.getElementById("demo").innerHTML = "你好 Dolly";
